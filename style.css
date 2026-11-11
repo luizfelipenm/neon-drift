@@ -69,3 +69,15 @@
   .row2{margin-top:10px}.chip{padding:6px 10px}
   .legend{margin-top:8px}
 }
+.overlay{touch-action:pan-y;-webkit-overflow-scrolling:touch}
+.panel{touch-action:pan-y}
+.linkbtn{pointer-events:auto;background:none;border:none;color:var(--dim);font:inherit;cursor:pointer;padding:6px 10px}
+@media (max-height:430px){
+  #over .big,#pause .big{font-size:28px;margin-bottom:2px}
+  #over .final{font-size:28px;margin:0}
+  #over .rec{min-height:0;margin-bottom:6px;font-size:12px}
+  .scores{margin-bottom:8px;font-size:11px}
+  .scores .t{margin-bottom:2px}
+  .scores li{padding:1px 10px}
+  #over .hint{margin-top:6px}
+}

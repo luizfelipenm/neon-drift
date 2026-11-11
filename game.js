@@ -184,6 +184,8 @@ function setState(s){
 $('startBtn').addEventListener('click', () => { audioOn(); startGame(); });
 $('againBtn').addEventListener('click', () => { audioOn(); startGame(); });
 $('resumeBtn').addEventListener('click', () => { audioOn(); setState('play'); });
+$('menuBtn').addEventListener('click', () => setState('menu'));
+$('pauseMenuBtn').addEventListener('click', () => { boss = null; setState('menu'); });
 ['startBtn','againBtn','resumeBtn'].forEach(id => $(id).addEventListener('touchstart', () => { touchMode = !pad; }, {passive:true}));
 
 // ---------- game state ----------
@@ -522,7 +524,7 @@ function update(dt, inp){
       continue;
     }
     for(let j=enemies.length-1;j>=0;j--){
-      const e = enemies[j]; if(e.spawn > 0) continue;
+      const e = enemies[j]; if(!e || e.spawn > 0) continue;
       if((b.x-e.x)**2 + (b.y-e.y)**2 < (e.r+4)**2){
         bullets.splice(i,1); e.hp--; e.hit = 0.08;
         const kb = e.type==='tank' ? 0.012 : 0.06;
@@ -539,6 +541,7 @@ function update(dt, inp){
   // inimigos
   for(let i=enemies.length-1;i>=0;i--){
     const e = enemies[i];
+    if(!e) continue;
     e.t += dt; e.hit = Math.max(0, e.hit - dt);
     if(e.spawn > 0){ e.spawn -= dt; continue; }
     const dx = P.x-e.x, dy = P.y-e.y, d = Math.hypot(dx,dy)||1;
@@ -577,9 +580,9 @@ function update(dt, inp){
     }
     e.x += e.vx*k; e.y += e.vy*k;
     e.x = Math.max(e.r, Math.min(W-e.r, e.x)); e.y = Math.max(e.r, Math.min(H-e.r, e.y));
-    if(d < e.r + P.r - 3) playerHit();
-    if(state !== 'play') return;
+    if(d < e.r + P.r - 3){ playerHit(); break; } // playerHit pode remover inimigos da lista
   }
+  if(state !== 'play') return;
 
   // balas inimigas
   for(let i=ebullets.length-1;i>=0;i--){
@@ -754,6 +757,10 @@ function render(){
 let last = performance.now(), hudT = 0, statusT = 0, ambT = 0;
 const AMB = [COL.cyan, COL.pink, COL.yellow, COL.green, COL.orange, COL.purple];
 function loop(now){
+  requestAnimationFrame(loop);
+  try { frame(now); } catch(err){ console.error('[neon-drift]', err); }
+}
+function frame(now){
   const dt = Math.min(0.033, (now - last) / 1000); last = now;
   const hadPad = !!pad;
   pollPad();
@@ -784,7 +791,6 @@ function loop(now){
   hudT -= dt; if(hudT <= 0 && P && (state === 'play' || state === 'dying')){ hud(); hudT = 0.1; }
 
   prevBtn = pad ? pad.buttons.map(b => b.pressed || b.value > 0.5) : [];
-  requestAnimationFrame(loop);
 }
 document.addEventListener('visibilitychange', () => { if(document.hidden && state === 'play') setState('pause'); });
 
