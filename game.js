@@ -58,6 +58,77 @@ function noise(dur,vol=0.12,freq=1200){
 }
 let lastShotSnd = 0;
 
+// ---------- áudio do controle (alto-falante + microfone) ----------
+// O DualSense só aparece como dispositivo de áudio quando ligado por USB
+// (PC com Chrome/Edge). Por Bluetooth o áudio dele é proprietário (só PS5).
+const CTRL_AUDIO_RE = /dualsense|wireless controller|dualshock|sony|ps5/i;
+const mic = {on:false, stream:null, src:null, an:null, buf:null, level:0, noise:0.02, calib:0, loudT:0, cd:0, label:'', out:''};
+function hasMedia(){ return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia); }
+async function audioDevices(){ try { return await navigator.mediaDevices.enumerateDevices(); } catch(e){ return []; } }
+async function routeOutputToController(){
+  if(!AC || !AC.setSinkId) return '';
+  const out = (await audioDevices()).find(d => d.kind === 'audiooutput' && CTRL_AUDIO_RE.test(d.label));
+  try { await AC.setSinkId(out ? out.deviceId : ''); } catch(e){ return ''; }
+  mic.out = out ? out.label : '';
+  return mic.out;
+}
+async function micStart(){
+  if(!hasMedia()){ toast('Microfone não suportado neste navegador'); return false; }
+  audioOn();
+  const constraints = d => ({audio: Object.assign({echoCancellation:false, noiseSuppression:false, autoGainControl:false}, d ? {deviceId:{exact:d}} : {})});
+  try {
+    let stream = await navigator.mediaDevices.getUserMedia(constraints(null));
+    // com a permissão concedida os nomes dos dispositivos aparecem: prefere o mic do controle
+    const ctrlIn = (await audioDevices()).find(d => d.kind === 'audioinput' && CTRL_AUDIO_RE.test(d.label));
+    const cur = stream.getAudioTracks()[0];
+    if(ctrlIn && cur && cur.getSettings().deviceId !== ctrlIn.deviceId){
+      try { const s2 = await navigator.mediaDevices.getUserMedia(constraints(ctrlIn.deviceId)); stream.getTracks().forEach(t => t.stop()); stream = s2; } catch(e){}
+    }
+    mic.stream = stream;
+    mic.label = (stream.getAudioTracks()[0] || {}).label || 'microfone';
+    if(AC){
+      mic.src = AC.createMediaStreamSource(stream);
+      mic.an = AC.createAnalyser(); mic.an.fftSize = 512;
+      mic.buf = new Float32Array(mic.an.fftSize);
+      mic.src.connect(mic.an); // não liga no destino: sem retorno de som
+    }
+    mic.on = true; mic.calib = 1.2; mic.noise = 0.02; mic.level = 0;
+    const out = await routeOutputToController();
+    const ctrlMic = CTRL_AUDIO_RE.test(mic.label);
+    if(ctrlMic || out) toast('🎮 Áudio do controle: ' + [out && 'som', ctrlMic && 'microfone'].filter(Boolean).join(' + ') + ' ✓');
+    else toast('🎤 Usando o mic do aparelho (controle sem áudio por Bluetooth)');
+    stream.getAudioTracks()[0].addEventListener('ended', () => { micStop(); toast('Microfone desconectado'); });
+    return true;
+  } catch(e){
+    toast(e && e.name === 'NotAllowedError' ? 'Permissão do microfone negada' : 'Não deu para abrir o microfone');
+    return false;
+  }
+}
+function micStop(){
+  try { mic.stream && mic.stream.getTracks().forEach(t => t.stop()); } catch(e){}
+  try { mic.src && mic.src.disconnect(); } catch(e){}
+  mic.on = false; mic.stream = mic.src = mic.an = null; mic.level = 0;
+}
+// nível do microfone (RMS) e detecção de grito
+function micUpdate(dt){
+  if(!mic.on || !mic.an) return false;
+  mic.an.getFloatTimeDomainData(mic.buf);
+  let sum = 0; for(let i=0;i<mic.buf.length;i++) sum += mic.buf[i]*mic.buf[i];
+  const rms = Math.sqrt(sum / mic.buf.length);
+  mic.level += (rms - mic.level) * Math.min(1, dt*20);
+  if(mic.calib > 0){ mic.calib -= dt; mic.noise = Math.max(mic.noise*0.9 + rms*0.1, 0.005); return false; }
+  if(rms < mic.noise * 2) mic.noise += (rms - mic.noise) * dt * 0.5; // acompanha o ruído do ambiente
+  mic.cd = Math.max(0, mic.cd - dt);
+  const thr = micThreshold();
+  if(mic.level > thr) mic.loudT += dt; else mic.loudT = 0;
+  if(mic.loudT > 0.15 && mic.cd <= 0){ mic.loudT = 0; mic.cd = 3; return true; }
+  return false;
+}
+function micThreshold(){ return Math.max(0.12, mic.noise * 6); }
+if(navigator.mediaDevices && navigator.mediaDevices.addEventListener){
+  navigator.mediaDevices.addEventListener('devicechange', () => { if(mic.on) routeOutputToController(); });
+}
+
 // ---------- gamepad ----------
 let pad = null, padBlocked = false, prevBtn = [];
 function pollPad(){
@@ -146,7 +217,12 @@ function toast(msg){ const t = $('toast'); t.textContent = msg; t.classList.add(
 let bannerT = 0;
 function banner(msg, color){ const b = $('banner'); b.textContent = msg; b.style.color = color || COL.cyan; b.style.textShadow = '0 0 24px ' + (color||COL.cyan); b.style.opacity = 1; clearTimeout(bannerT); bannerT = setTimeout(()=>b.style.opacity = 0, 1500); }
 
+async function toggleMic(){
+  if(mic.on){ micStop(); opts.mic = false; save('nd_opts', opts); renderOpts(); toast('Microfone desligado'); if(AC && AC.setSinkId) AC.setSinkId('').catch(()=>{}); return; }
+  const ok = await micStart(); opts.mic = ok; save('nd_opts', opts); renderOpts();
+}
 function renderOpts(){
+  $('optMic').classList.toggle('off', !mic.on);
   $('optSound').classList.toggle('off', !opts.sound);
   $('optVibe').classList.toggle('off', !opts.vibe);
 }
@@ -167,6 +243,8 @@ async function goFullscreen(){
 $('optSound').addEventListener('click', () => toggleOpt('sound'));
 $('optVibe').addEventListener('click', () => toggleOpt('vibe'));
 $('optFull').addEventListener('click', goFullscreen);
+$('optMic').addEventListener('click', toggleMic);
+if(!hasMedia()) $('optMic').style.display = 'none';
 if(!document.documentElement.requestFullscreen) $('optFull').style.display = 'none';
 renderOpts();
 
@@ -216,6 +294,9 @@ function hud(){
   let h = '';
   for(const k in PW_INFO) if(power[k] > 0) h += `<span class="pw" style="color:${PW_INFO[k].c}">${PW_INFO[k].l}<i style="width:${Math.min(100,power[k]/PW_INFO[k].t*100)}%"></i></span>`;
   $('powers').innerHTML = h;
+  const mm = $('micmeter');
+  if(mic.on){ mm.style.display = 'block'; $('miclvl').style.width = Math.min(100, mic.level / micThreshold() * 70) + '%'; mm.classList.toggle('cool', mic.cd > 0); }
+  else mm.style.display = 'none';
   if(boss) $('bossfill').style.width = Math.max(0, boss.hp/boss.maxhp*100) + '%';
 }
 
@@ -498,6 +579,7 @@ function update(dt, inp){
     }
     if(time - lastShotSnd > 0.07){ tone(1200, 600, 0.05, 'square', 0.012); lastShotSnd = time; }
   }
+  if(micUpdate(dt) && P.bombs > 0){ useBomb(); floatText(P.x, P.y - 30, 'GRITO!', COL.orange); }
   if(inp.bomb) useBomb();
 
   // spawn
@@ -772,6 +854,7 @@ function frame(now){
     if(inp.start){ audioOn(); startGame(); }
     else if(inp.sq) toggleOpt('sound');
     else if(inp.back) toggleOpt('vibe');
+    else if(inp.bomb) toggleMic();
     statusT -= dt; if(statusT <= 0){ updateStatus(); statusT = 0.5; }
     ambT -= dt; if(ambT <= 0){ burst(Math.random()*W, Math.random()*H, AMB[Math.random()*AMB.length|0], 22, 5, 0.9); ambT = 0.7; }
   } else if(state === 'over'){
@@ -788,7 +871,7 @@ function frame(now){
 
   render();
 
-  hudT -= dt; if(hudT <= 0 && P && (state === 'play' || state === 'dying')){ hud(); hudT = 0.1; }
+  hudT -= dt; if(hudT <= 0 && P && (state === 'play' || state === 'dying')){ hud(); hudT = mic.on ? 0.05 : 0.1; }
 
   prevBtn = pad ? pad.buttons.map(b => b.pressed || b.value > 0.5) : [];
 }

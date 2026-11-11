@@ -81,3 +81,9 @@
   .scores li{padding:1px 10px}
   #over .hint{margin-top:6px}
 }
+#micmeter{display:none;margin-top:6px}
+#micmeter span{font-size:11px;margin-right:4px;vertical-align:middle}
+#micmeter .mtrack{display:inline-block;vertical-align:middle;position:relative;width:64px;height:5px;border-radius:3px;background:rgba(255,138,31,.18);overflow:hidden}
+#miclvl{height:100%;width:0;background:var(--orange);box-shadow:0 0 8px var(--orange)}
+#micmeter .mtrack i{position:absolute;left:70%;top:0;bottom:0;width:2px;background:#fff;opacity:.7}
+#micmeter.cool #miclvl{background:#555;box-shadow:none}

@@ -15,7 +15,14 @@ HTML5 + Canvas puro, sem dependências nem build. Instalável como app (PWA) e f
 | Bomba | △ | E / Q | botão BOMB |
 | Pausar | Options | Esc / P | botão II |
 
-No menu: □ liga/desliga o som e ○ liga/desliga a vibração.
+No menu: □ liga/desliga o som, ○ a vibração e △ o microfone.
+
+## Áudio e microfone do controle
+
+Com o microfone ligado, **grite para soltar a bomba** (medidor 🎤 no canto; recarga de 3 s).
+
+- **DualSense por cabo USB-C no PC (Chrome/Edge):** o som do jogo sai no alto-falante do controle e o microfone dele é usado.
+- **DualSense por Bluetooth (celular):** o áudio do controle não é acessível fora do PS5, então o jogo usa o microfone e o som do próprio aparelho.
 
 ## Conteúdo
 
@@ -24,6 +31,7 @@ No menu: □ liga/desliga o som e ○ liga/desliga a vibração.
 - Power-ups: Rajada (R), Leque (S), Escudo (O) e Bomba (◆)
 - Multiplicador por combo, vida extra a cada 25 mil pontos, top 5 local
 - Vibração do controle (dual-rumble) em abates, dano, bombas e no chefão
+- Microfone: grito = bomba
 
 ## Conectar o DualSense
 
