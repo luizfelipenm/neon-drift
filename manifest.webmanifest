@@ -1,0 +1,18 @@
+{
+  "name": "NEON DRIFT — ZIUL",
+  "short_name": "Neon Drift",
+  "description": "Twin-stick shooter neon jogável com controle de PS5.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#05060d",
+  "theme_color": "#05060d",
+  "lang": "pt-BR",
+  "categories": ["games"],
+  "icons": [
+    {"src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+    {"src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"},
+    {"src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml"}
+  ]
+}

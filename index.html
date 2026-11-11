@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#05060d">
+<meta name="description" content="NEON DRIFT — twin-stick shooter neon para celular, jogável com controle de PS5 (DualSense), Xbox, teclado ou toque.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Neon Drift">
+<meta property="og:title" content="NEON DRIFT — ZIUL">
+<meta property="og:description" content="Twin-stick shooter neon. Conecte seu DualSense e jogue no celular.">
+<meta property="og:image" content="/icons/icon-512.png">
+<title>NEON DRIFT — ZIUL</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="hud">
+  <div class="row">
+    <div><div id="score">0</div><div id="best">RECORDE 0</div></div>
+    <div><div id="mult">x1</div><div id="wave">ONDA 1</div><div id="powers"></div></div>
+    <div id="right"><div id="lives">♥♥♥</div><div id="bombs">◆◆◆</div></div>
+  </div>
+</div>
+<div id="bossbar"><div class="name">NÚCLEO</div><div class="track"><div class="fill" id="bossfill"></div></div></div>
+<div id="banner"></div>
+
+<div class="overlay show" id="menu">
+  <div class="panel">
+    <div class="logo">NEON DRIFT</div>
+    <div class="sub">ZIUL · TWIN-STICK ARENA</div>
+    <div class="status" id="padStatus"><span class="dot"></span><span id="padText">Conecte o DualSense e aperte qualquer botão</span></div>
+    <div class="controls">
+      <div><span class="k">L3</span> Mover</div>
+      <div><span class="k">R3</span> Mirar e atirar</div>
+      <div><span class="k x">✕</span> Dash</div>
+      <div><span class="k t">△</span> Bomba</div>
+      <div><span class="k">R2</span> Atirar p/ frente</div>
+      <div><span class="k">OPT</span> Pausar</div>
+    </div>
+    <button class="btn" id="startBtn"><span class="k x">✕</span> JOGAR</button>
+    <div class="row2">
+      <button class="chip" id="optSound"><span class="k s">□</span> Som</button>
+      <button class="chip" id="optVibe"><span class="k o">○</span> Vibração</button>
+      <button class="chip" id="optFull">⛶ Tela cheia</button>
+    </div>
+    <div class="legend">
+      <span><b style="color:#ffe14d">R</b>Rajada</span>
+      <span><b style="color:#ff2bd6">S</b>Leque</span>
+      <span><b style="color:#00f0ff">O</b>Escudo</span>
+      <span><b style="color:#ff8a1f">◆</b>Bomba</span>
+    </div>
+    <div class="hint" id="menuHint">Sem controle? Toque: lado esquerdo move, lado direito mira. A cada 5 ondas, um chefão.</div>
+  </div>
+</div>
+
+<div class="overlay" id="pause">
+  <div class="panel">
+    <div class="big" style="color:var(--cyan);text-shadow:0 0 22px rgba(0,240,255,.6)">PAUSADO</div>
+    <button class="btn" id="resumeBtn"><span class="k">OPT</span> CONTINUAR</button>
+    <div class="hint"><span class="k o">○</span> voltar ao menu</div>
+  </div>
+</div>
+
+<div class="overlay" id="over">
+  <div class="panel">
+    <div class="big">GAME OVER</div>
+    <div class="final" id="finalScore">0</div>
+    <div class="rec" id="recText"></div>
+    <ul class="scores" id="topList"></ul>
+    <button class="btn" id="againBtn"><span class="k x">✕</span> DE NOVO</button>
+    <div class="hint" id="overStats"></div>
+    <div class="hint"><span class="k o">○</span> menu</div>
+  </div>
+</div>
+
+<div class="touchbtn" id="tDash">DASH</div>
+<div class="touchbtn" id="tBomb">BOMB</div>
+<div class="touchbtn" id="tPause">II</div>
+<div id="toast"></div>
+
+<script src="/game.js"></script>
+</body>
+</html>
